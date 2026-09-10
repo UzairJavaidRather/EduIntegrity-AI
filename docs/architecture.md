@@ -3,63 +3,30 @@
 ## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        Instructor's Browser                              │
-│                         Next.js Frontend                                 │
-│   Login → Upload Assignment → View Risk Report → Make Final Decision    │
-└────────────────────────────┬────────────────────────────────────────────┘
-                             │ HTTPS REST API
-                             ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      FastAPI Backend (Python)                            │
-│  /api/v1/auth  /api/v1/submissions  /api/v1/analysis  /api/v1/reports  │
-└──────┬──────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                    Instructor's Browser                       │
+│               HTML/CSS/JS Dashboard (index.html)             │
+│   Upload Assignment → View Risk Report → Record Decision     │
+└───────────────────────────┬──────────────────────────────────┘
+                            │ HTTP REST API
+                            ▼
+┌──────────────────────────────────────────────────────────────┐
+│                 FastAPI Backend (Python)                      │
+│   POST /api/v1/analysis/analyze                              │
+│   POST /api/v1/extraction/extract-text                       │
+│   GET  /health                                               │
+└──────┬───────────────────────────────────────────────────────┘
        │
-       ├──────────────────────► PostgreSQL Database
-       │                         Users, Submissions, Analysis Results,
-       │                         Historical Profiles, Instructor Decisions
-       │
-       └──────────────────────► IBM watsonx Orchestrate
-                                 │  (Multi-agent coordinator)
-                                 │
-                  ┌──────────────┼──────────────────────────┐
-                  │              │                           │
-                  ▼              ▼                           ▼
-        Assignment Analyzer  Similarity          Writing Style Agent
-        Agent                Detection Agent     Historical Analysis
-        (text extraction,    (TF-IDF, n-gram,   Agent
-         preprocessing)      cosine similarity)  (style metrics,
-                              Semantic Analysis   deviation detection)
-                              Agent
-                              (embeddings,
-                               vector similarity)
-                  │
-                  └──────────────────────────────────────────►
-                                                    Integrity Assessment Agent
-                                                    (packages all evidence)
-                                                         │
-                                                         ▼
-                                                    RAG Pipeline
-                                                    (ChromaDB)
-                                                    Historical assignments,
-                                                    instructor feedback,
-                                                    course rubrics,
-                                                    integrity policies
-                                                         │
-                                                         ▼
-                                                    IBM Granite
-                                                    (via watsonx.ai)
-                                                    Contextual reasoning,
-                                                    explanation generation,
-                                                    risk assessment
-                                                         │
-                                                         ▼
-                                                    Risk Score Engine
-                                                    (0–100, configurable weights)
-                                                         │
-                                                         ▼
-                                                    Integrity Report
-                                                    (returned to frontend)
+       ├── services/extractor.py         PDF / DOCX / TXT → clean text
+       ├── services/lexical_similarity.py TF-IDF cosine similarity score
+       ├── services/semantic_similarity.py Sentence embeddings similarity
+       ├── services/writing_style.py      8 style metrics + deviation score
+       ├── services/risk_scoring.py       6-component weighted risk score
+       └── services/granite_reasoning.py  IBM Granite via watsonx.ai
+                                               │
+                                               ▼
+                                     IBM watsonx.ai (Granite)
+                                     Natural-language assessment
 ```
 
 ---
@@ -70,69 +37,50 @@
 Instructor uploads file (.pdf / .docx / .txt)
         │
         ▼
-[Assignment Analyzer Agent]
-  - Validate file type and size
-  - Extract raw text (pypdf / python-docx)
-  - Clean and preprocess text
+[extractor.py]
+  Validate file type + size
+  Extract raw text (pypdf / python-docx / plain read)
+  Clean whitespace
+  Guard: reject < 50 characters
         │
-        ▼
-[Similarity Detection Agent]                [Semantic Analysis Agent]
-  - TF-IDF vectorization                      - Sentence embeddings
-  - Cosine similarity score                   - Vector cosine similarity
-  - N-gram matching                           - Paraphrase detection
-  - Extract matching passages                 - Semantic similarity score
-        │                                           │
-        └─────────────────────┬─────────────────────┘
-                              │
-                              ▼
-                   [Writing Style Agent]
-                     - Avg sentence length
-                     - Vocabulary diversity
-                     - Readability score
-                     - Sentence complexity
-                     - Punctuation patterns
-                              │
-                              ▼
-                   [Historical Analysis Agent]
-                     - Retrieve student's past submissions
-                     - Compare style metrics
-                     - Detect anomalies in writing profile
-                              │
-                              ▼
-                   [RAG Retrieval]
-                     - Query ChromaDB with submission text
-                     - Retrieve relevant: historical assignments,
-                       instructor feedback, assignment instructions,
-                       integrity policies
-                              │
-                              ▼
-                   [Integrity Assessment Agent]
-                     - Package all scores and evidence
-                     - Build structured context for Granite
-                              │
-                              ▼
-                   [IBM Granite via watsonx.ai]
-                     - Receives structured evidence
-                     - Generates contextual explanation
-                     - Identifies suspicious patterns
-                     - Produces recommendations
-                     - Output is advisory, not accusatory
-                              │
-                              ▼
-                   [Risk Score Engine]
-                     - Combines component scores
-                     - Applies configurable weights
-                     - Calculates 0–100 risk score
-                     - Assigns risk band (LOW/MODERATE/HIGH/VERY HIGH)
-                              │
-                              ▼
-                   [Integrity Report]
-                     - Risk score + band
-                     - Component breakdown
-                     - Matching passages
-                     - Granite explanation
-                     - Evidence summary
-                     - Instructor decision section
+        ├──────────────────────────────────────┐
+        ▼                                      ▼
+[lexical_similarity.py]             [semantic_similarity.py]
+  TF-IDF vectorisation                Sentence Transformer encode
+  Cosine similarity vs reference      Cosine similarity vs reference
+  Returns: 0.0 – 1.0                  Returns: 0.0 – 1.0
+        │                                      │
+        └──────────────┬───────────────────────┘
+                       │
+                       ▼
+            [writing_style.py]
+              avg_sentence_length
+              avg_word_length
+              vocabulary_diversity  (Type-Token Ratio)
+              punctuation_density
+              readability_score     (Flesch Reading Ease)
+              long_word_ratio
+              sentence_length_std
+              calculate_style_deviation() vs reference profile
+              Returns: style_profile dict + deviation 0.0–1.0
+                       │
+                       ▼
+            [risk_scoring.py]
+              score = (sem × 0.25 + lex × 0.20 + style × 0.20
+                       + hist × 0.15 + cit × 0.10 + ai × 0.10) × 100
+              Assigns risk band: LOW / MODERATE / HIGH / VERY HIGH
+              Returns: risk_score, risk_level, contributions, disclaimer
+                       │
+                       ▼
+            [granite_reasoning.py]
+              Builds structured evidence prompt
+              Calls IBM Granite via watsonx.ai SDK
+              Falls back to rule-based summary if unconfigured
+              Returns: natural-language advisory assessment
+                       │
+                       ▼
+            AnalysisReport (Pydantic response)
+              → returned to frontend as JSON
 ```
 
 ---
@@ -140,16 +88,16 @@ Instructor uploads file (.pdf / .docx / .txt)
 ## Risk Score Formula
 
 ```
-Risk Score = (semantic_sim × 0.25 +
-              lexical_sim × 0.20 +
-              style_deviation × 0.20 +
-              historical_anomaly × 0.15 +
-              citation_anomaly × 0.10 +
-              ai_indicator × 0.10) × 100
+Risk Score (0–100) =
+  semantic_similarity  × 0.25 × 100
+  + lexical_similarity × 0.20 × 100
+  + style_deviation    × 0.20 × 100
+  + historical_anomaly × 0.15 × 100   ← uses reference-text proxy in MVP
+  + citation_anomaly   × 0.10 × 100   ← 0.0 in MVP (not yet computed)
+  + ai_indicator       × 0.10 × 100   ← 0.0 in MVP (not yet computed)
 
-Each component is normalized to [0.0, 1.0] before weighting.
-Weights are configurable via environment variables.
-Weights must sum to 1.0.
+Each input is normalised to [0.0, 1.0] before weighting.
+Weights are configurable via environment variables (see .env.example).
 
 Risk Bands (project-defined):
   0–30   → LOW
@@ -160,42 +108,65 @@ Risk Bands (project-defined):
 
 ---
 
-## Database Schema (Phase 11)
+## File Structure
 
 ```
-users               ← Instructors and admin accounts
-students            ← Student records
-courses             ← Course information
-assignments         ← Assignment definitions and rubrics
-submissions         ← Individual student submissions
-analysis_results    ← Full analysis output per submission
-similarity_results  ← Detailed similarity scores
-style_profiles      ← Student writing style history
-instructor_feedback ← Instructor notes and decisions
+EduIntegrity-AI/
+├── backend/
+│   ├── app/
+│   │   ├── main.py                    FastAPI app, CORS, router registration
+│   │   ├── api/
+│   │   │   ├── analysis.py            POST /api/v1/analysis/analyze
+│   │   │   └── extraction.py          POST /api/v1/extraction/extract-text
+│   │   ├── schemas/
+│   │   │   └── extraction.py          Pydantic response schema for extraction
+│   │   └── services/
+│   │       ├── extractor.py           Text extraction (PDF/DOCX/TXT)
+│   │       ├── lexical_similarity.py  TF-IDF cosine similarity
+│   │       ├── semantic_similarity.py Sentence Transformers embeddings
+│   │       ├── writing_style.py       8 style metrics + deviation
+│   │       ├── risk_scoring.py        Weighted 0-100 risk score
+│   │       └── granite_reasoning.py   IBM Granite via watsonx.ai
+│   ├── tests/
+│   │   └── test_extractor.py          16 unit tests
+│   ├── conftest.py                    pytest sys.path config
+│   ├── requirements.txt               Python dependencies (actual only)
+│   └── test_granite.py               IBM Granite connection test
+├── frontend/
+│   └── index.html                    Single-page instructor dashboard
+├── data/
+│   └── samples/                      Test assignment files
+├── docker/
+│   ├── Dockerfile.backend            Multi-stage Python image
+│   ├── Dockerfile.frontend           Nginx static server
+│   └── docker-compose.yml            Backend + frontend services
+├── docs/
+│   └── architecture.md              This file
+├── .env.example                      Environment variable template
+├── .gitignore
+├── README.md
+└── PROJECT_NOTES.md
 ```
 
 ---
 
-## Technology Decisions
+## IBM Technology Used
 
-| Decision | Choice | Reason |
-|---|---|---|
-| Backend framework | FastAPI | Fast, async, automatic OpenAPI docs, Pydantic validation |
-| Frontend framework | Next.js | React-based, TypeScript, production-ready, IBM-compatible |
-| Database | PostgreSQL | Relational, reliable, production-grade |
-| Vector DB | ChromaDB | Persistent, easy Python integration, good for prototype |
-| Embeddings | all-MiniLM-L6-v2 | Runs locally, no API key, good semantic quality |
-| AI model | IBM Granite | Required by project spec, strong reasoning |
-| Orchestration | watsonx Orchestrate | Required by project spec, multi-agent coordination |
+| Technology | Role |
+|---|---|
+| **IBM Granite** | Receives structured evidence dict; generates natural-language advisory assessment |
+| **IBM watsonx.ai** | Hosts Granite; accessed via `ibm-watsonx-ai` Python SDK |
+| **IBM Bob** | Primary coding assistant — generated all services, tests, and architecture |
 
 ---
 
-## Security Considerations
+## What Is Not In This MVP
 
-- Credentials stored in `.env` — never in source code
-- File upload validation: type, size, content checks
-- JWT authentication with bcrypt password hashing
-- CORS restricted to known frontend origins
-- SQL injection prevented by SQLAlchemy ORM
-- Input sanitization before AI prompts
-- Safe logging (no credentials in logs)
+The following were designed and documented but not implemented in the
+time available:
+
+- **PostgreSQL database** — no persistence between sessions
+- **JWT authentication** — no login required
+- **RAG pipeline** — ChromaDB ingestion and retrieval not built
+- **watsonx Orchestrate** — single-endpoint pipeline used instead of agents
+- **Full historical profiles** — reference-text proxy used as baseline
