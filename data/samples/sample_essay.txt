@@ -1,0 +1,17 @@
+Academic Integrity in Higher Education
+
+Academic integrity is the foundation of honest scholarship and learning. It refers to the commitment to five fundamental values: honesty, trust, fairness, respect, and responsibility. These principles guide how students, instructors, and institutions approach academic work.
+
+When students submit their own original work, they demonstrate genuine understanding of the subject matter. Plagiarism — presenting someone else's work as your own — undermines this process and devalues the educational experience for everyone involved.
+
+Modern educational institutions must balance rigorous enforcement of academic standards with a fair and evidence-based approach. Not every similarity between two documents indicates misconduct. Students may legitimately cite the same sources, use standard terminology, or address the same topic from similar angles.
+
+The purpose of academic integrity analysis tools is to assist instructors in identifying patterns that warrant further review — not to replace human judgment. A high similarity score or an unusual writing pattern is an indicator, not a verdict.
+
+Instructors play a critical role in contextualizing analysis results. They know the assignment, the student, the course context, and the academic environment. An AI system can surface evidence and patterns; the instructor must evaluate that evidence and make the final determination.
+
+Writing style is another dimension worth examining. A student who consistently writes in short, simple sentences may attract attention if their final submission contains complex, multi-clause constructions. Conversely, a sudden increase in vocabulary sophistication without corresponding improvement in other areas may indicate external assistance.
+
+Citation analysis can reveal further anomalies. Missing citations for clearly paraphrased passages, an unusually high density of obscure citations, or citations that do not match the claimed sources are all patterns that merit instructor attention.
+
+None of these indicators, individually or in combination, constitutes proof of academic misconduct. They are data points that help instructors ask the right questions and initiate the right conversations with students.

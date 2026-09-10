@@ -55,12 +55,14 @@ app.add_middleware(
 
 
 # ─── Routes ──────────────────────────────────────────────────────────────────
-# API routers are registered here as they are built in later phases.
-# Example (Phase 11):
-#   from app.api import submissions, analysis, auth
-#   app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
-#   app.include_router(submissions.router, prefix="/api/v1/submissions", tags=["Submissions"])
-#   app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["Analysis"])
+# Routers are imported and registered here as each phase is completed.
+# The prefix /api/v1 is applied to every route in each router.
+
+from app.api import extraction  # Phase 2 — text extraction
+from app.api import analysis    # MVP — full pipeline
+
+app.include_router(extraction.router, prefix="/api/v1")
+app.include_router(analysis.router,   prefix="/api/v1")
 
 
 # ─── Health check endpoints ───────────────────────────────────────────────────
