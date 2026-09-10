@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EduIntegrity-AI Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f3f4f6;
+        margin: 0;
+        padding: 24px;
+        color: #111827;
+      }
+      h1 {
+        margin-bottom: 20px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        padding: 18px;
+      }
+      .label {
+        color: #6b7280;
+        font-size: 14px;
+      }
+      .value {
+        font-size: 28px;
+        font-weight: bold;
+        margin-top: 8px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      th, td {
+        text-align: left;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      th {
+        background: #eef2ff;
+      }
+      .pill {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .high { background: #fee2e2; color: #991b1b; }
+      .medium { background: #fef3c7; color: #92400e; }
+      .low { background: #dcfce7; color: #166534; }
+      .reasons {
+        font-size: 13px;
+        color: #4b5563;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>EduIntegrity-AI Dashboard</h1>
+
+    <div class="stats">
+      <div class="card">
+        <div class="label">Total Projects</div>
+        <div class="value" id="totalProjects">0</div>
+      </div>
+      <div class="card">
+        <div class="label">High Risk</div>
+        <div class="value" id="highRisk">0</div>
+      </div>
+      <div class="card">
+        <div class="label">Medium Risk</div>
+        <div class="value" id="mediumRisk">0</div>
+      </div>
+      <div class="card">
+        <div class="label">Low Risk</div>
+        <div class="value" id="lowRisk">0</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 24px;">
+      <h2>Projects</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>District</th>
+            <th>Budget Variance</th>
+            <th>Progress Gap</th>
+            <th>Risk</th>
+            <th>Reasons</th>
+          </tr>
+        </thead>
+        <tbody id="projectTableBody"></tbody>
+      </table>
+    </div>
+
+    <script>
+      async function loadDashboard() {
+        const response = await fetch('http://127.0.0.1:8000/dashboard/summary');
+        const data = await response.json();
+
+        document.getElementById('totalProjects').textContent = data.total_projects;
+        document.getElementById('highRisk').textContent = data.high_risk_projects;
+        document.getElementById('mediumRisk').textContent = data.medium_risk_projects;
+        document.getElementById('lowRisk').textContent = data.low_risk_projects;
+
+        const tbody = document.getElementById('projectTableBody');
+        tbody.innerHTML = '';
+
+        data.projects.forEach((project) => {
+          const row = document.createElement('tr');
+          const risk = project.risk.risk_level.toLowerCase();
+
+          row.innerHTML = `
+            <td>${project.name}</td>
+            <td>${project.district}</td>
+            <td>${project.risk.budget_variance}</td>
+            <td>${project.risk.progress_gap}%</td>
+            <td><span class="pill ${risk}">${project.risk.risk_level}</span></td>
+            <td class="reasons">${project.risk.reasons.join(', ')}</td>
+          `;
+
+          tbody.appendChild(row);
+        });
+      }
+
+      loadDashboard();
+      setInterval(loadDashboard, 30000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+# =============================================================================
+# EduIntegrity AI — Python Backend Dependencies
+#
+# Install with:
+#   pip install -r requirements.txt
+#
+# Grouped by purpose so it's clear why each package is needed.
+# =============================================================================
+
+# ─── Web framework ────────────────────────────────────────────────────────────
+fastapi==0.115.0
+uvicorn[standard]==0.30.6     # ASGI server to run FastAPI
+python-multipart==0.0.9       # Required for file upload (form/multipart)
+
+# ─── Data validation ─────────────────────────────────────────────────────────
+pydantic==2.8.2
+pydantic-settings==2.4.0      # Read settings from .env file
+
+# ─── Environment variables ───────────────────────────────────────────────────
+python-dotenv==1.0.1
+
+# ─── Authentication ──────────────────────────────────────────────────────────
+python-jose[cryptography]==3.3.0   # JWT token creation and verification
+passlib[bcrypt]==1.7.4             # Password hashing with bcrypt
+
+# ─── Database ────────────────────────────────────────────────────────────────
+sqlalchemy==2.0.35            # ORM for PostgreSQL
+psycopg2-binary==2.9.9        # PostgreSQL driver
+alembic==1.13.2               # Database migrations
+
+# ─── File text extraction ────────────────────────────────────────────────────
+pypdf==4.3.1                  # PDF text extraction
+python-docx==1.1.2            # DOCX text extraction
+
+# ─── Lexical similarity ──────────────────────────────────────────────────────
+scikit-learn==1.5.2           # TF-IDF, cosine similarity
+numpy==1.26.4                 # Numerical operations
+
+# ─── Semantic similarity ─────────────────────────────────────────────────────
+sentence-transformers==3.1.1  # Sentence embeddings (all-MiniLM-L6-v2)
+
+# ─── RAG / Vector database ───────────────────────────────────────────────────
+chromadb==0.5.18              # Persistent vector database for RAG
+
+# ─── IBM watsonx.ai (Granite) ────────────────────────────────────────────────
+ibm-watsonx-ai==1.1.2         # IBM watsonx.ai Python SDK
+
+# ─── HTTP client ─────────────────────────────────────────────────────────────
+httpx==0.27.2                 # Async HTTP client (used in tests and agent calls)
+
+# ─── Testing ─────────────────────────────────────────────────────────────────
+pytest==8.3.3
+pytest-asyncio==0.24.0        # Async test support for FastAPI endpoints
+httpx==0.27.2                 # Also used as test client for FastAPI
