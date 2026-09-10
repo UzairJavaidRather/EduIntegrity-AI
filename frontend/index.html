@@ -306,11 +306,26 @@
           <div class="sub">Embeddings</div>
         </div>
         <div class="score-card">
+          <div class="label">Style Deviation</div>
+          <div class="value" id="styleDevScore">--</div>
+          <div class="sub">vs Reference</div>
+        </div>
+        <div class="score-card">
           <div class="label">Word Count</div>
           <div class="value" id="wordCount">--</div>
           <div class="sub">Submission</div>
         </div>
       </div>
+    </div>
+
+    <!-- Writing Style Profile -->
+    <div class="card">
+      <h2>Writing Style Profile</h2>
+      <p style="font-size:12px; color:#64748b; margin-bottom:16px;">
+        Measurable writing characteristics extracted from the submission.
+        Significant deviations from a student's historical baseline may warrant further review.
+      </p>
+      <div class="scores-grid" id="styleGrid"></div>
     </div>
 
     <!-- Risk Breakdown -->
@@ -472,7 +487,42 @@
     // Scores
     document.getElementById('lexScore').textContent = (d.lexical_similarity_score * 100).toFixed(1) + '%';
     document.getElementById('semScore').textContent = (d.semantic_similarity_score * 100).toFixed(1) + '%';
+    document.getElementById('styleDevScore').textContent = (d.style_deviation * 100).toFixed(1) + '%';
     document.getElementById('wordCount').textContent = d.word_count;
+
+    // Writing style profile grid
+    const styleGrid = document.getElementById('styleGrid');
+    styleGrid.innerHTML = '';
+    const styleLabels = {
+      avg_sentence_length:  'Avg Sentence Length',
+      avg_word_length:      'Avg Word Length',
+      vocabulary_diversity: 'Vocabulary Diversity',
+      readability_score:    'Readability Score',
+      long_word_ratio:      'Long Word Ratio',
+      punctuation_density:  'Punctuation Density',
+      sentence_length_std:  'Sentence Length Std Dev',
+    };
+    const styleUnits = {
+      avg_sentence_length:  ' words',
+      avg_word_length:      ' chars',
+      vocabulary_diversity: '',
+      readability_score:    ' / 100',
+      long_word_ratio:      '',
+      punctuation_density:  ' per 100w',
+      sentence_length_std:  '',
+    };
+    if (d.style_profile) {
+      for (const [key, label] of Object.entries(styleLabels)) {
+        const val = d.style_profile[key];
+        if (val === undefined) continue;
+        const unit = styleUnits[key] || '';
+        styleGrid.innerHTML += `
+          <div class="score-card">
+            <div class="label">${label}</div>
+            <div class="value" style="font-size:18px;">${parseFloat(val).toFixed(2)}${unit}</div>
+          </div>`;
+      }
+    }
 
     // Bar breakdown
     const barList = document.getElementById('barList');

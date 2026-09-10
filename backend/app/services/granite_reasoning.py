@@ -60,6 +60,13 @@ def _build_prompt(evidence: dict) -> str:
     interpret the evidence, and produce an explanatory assessment without
     making accusations.
     """
+    style_dev = evidence.get('style_deviation', 0)
+    style_note = (
+        f"{style_dev:.0%} deviation from reference writing style"
+        if style_dev > 0 else "No historical baseline available"
+    )
+    readability = evidence.get('readability_score', 0)
+
     return f"""You are an academic integrity advisor assisting an instructor.
 Your role is to explain analysis findings clearly and objectively.
 Do not accuse the student of any wrongdoing.
@@ -75,6 +82,9 @@ ANALYSIS RESULTS:
   (Measures direct text overlap using TF-IDF. Higher = more textual overlap.)
 - Semantic similarity score: {evidence.get('semantic_similarity', 0):.2f} / 1.00
   (Measures meaning similarity using embeddings. Detects paraphrasing.)
+- Writing style deviation: {style_note}
+  (Measures how much the writing style differs from the reference baseline.)
+- Readability score: {readability:.1f} / 100 (Flesch Reading Ease)
 - Overall risk score: {evidence.get('risk_score', 0):.1f} / 100
 - Risk level: {evidence.get('risk_level', 'UNKNOWN')}
 

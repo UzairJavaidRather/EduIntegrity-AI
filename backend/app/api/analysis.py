@@ -17,7 +17,7 @@ If no reference is provided, a built-in sample corpus is used.
 """
 
 import os
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from pydantic import BaseModel
 
 from app.services.extractor import ALLOWED_EXTENSIONS, extract_text_from_bytes
@@ -25,6 +25,7 @@ from app.services.lexical_similarity import lexical_similarity
 from app.services.semantic_similarity import semantic_similarity
 from app.services.risk_scoring import calculate_risk_score
 from app.services.granite_reasoning import generate_assessment
+from app.services.writing_style import build_style_profile, calculate_style_deviation
 
 
 router = APIRouter(
@@ -47,6 +48,10 @@ class AnalysisReport(BaseModel):
     # Similarity scores (0.0 – 1.0)
     lexical_similarity_score: float
     semantic_similarity_score: float
+
+    # Writing style profile
+    style_profile: dict
+    style_deviation: float       # 0.0 = same as baseline, 1.0 = very different
 
     # Risk assessment
     risk_score: float            # 0 – 100
@@ -180,13 +185,23 @@ async def analyze_submission(
     ref_truncated = " ".join(reference_text.split()[:512])
     sem_score = semantic_similarity(sub_truncated, ref_truncated)
 
-    # ── 5. Risk score ─────────────────────────────────────────────────────────
+    # ── 5. Writing style analysis ─────────────────────────────────────────────
+    style_profile = build_style_profile(submission_text)
+
+    # Historical profile — in the MVP we use the reference text as a proxy
+    # baseline. In a full implementation this would come from the student's
+    # stored past submissions in the database.
+    ref_style_profile = build_style_profile(reference_text)
+    style_dev = calculate_style_deviation(style_profile, ref_style_profile)
+
+    # ── 6. Risk score ─────────────────────────────────────────────────────────
     risk = calculate_risk_score(
         lexical_similarity=lex_score,
         semantic_similarity=sem_score,
+        style_deviation=style_dev,
     )
 
-    # ── 6. Build Granite evidence and get assessment ──────────────────────────
+    # ── 7. Build Granite evidence and get assessment ──────────────────────────
     matched = _extract_matched_passages(submission_text, reference_text)
     evidence = {
         "filename":             sub_filename,
@@ -196,6 +211,8 @@ async def analyze_submission(
         "risk_score":           risk["risk_score"],
         "risk_level":           risk["risk_level"],
         "matched_passages":     matched,
+        "style_deviation":      style_dev,
+        "readability_score":    style_profile.get("readability_score", 0),
     }
 
     assessment = generate_assessment(evidence)
@@ -208,7 +225,7 @@ async def analyze_submission(
     )
     granite_source = "granite" if granite_configured else "fallback"
 
-    # ── 7. Return report ──────────────────────────────────────────────────────
+    # ── 8. Return report ──────────────────────────────────────────────────────
     return AnalysisReport(
         filename=sub_filename,
         word_count=sub_result["word_count"],
@@ -216,6 +233,8 @@ async def analyze_submission(
         text_preview=submission_text[:300],
         lexical_similarity_score=round(lex_score, 4),
         semantic_similarity_score=round(sem_score, 4),
+        style_profile=style_profile,
+        style_deviation=round(style_dev, 4),
         risk_score=risk["risk_score"],
         risk_level=risk["risk_level"],
         risk_band_description=risk["risk_band_description"],
