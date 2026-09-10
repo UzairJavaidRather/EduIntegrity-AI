@@ -59,14 +59,10 @@ app.add_middleware(
 # The prefix /api/v1 is applied to every route in each router.
 
 from app.api import extraction  # Phase 2 — text extraction
+from app.api import analysis    # MVP — full pipeline
 
 app.include_router(extraction.router, prefix="/api/v1")
-
-# Future phases will add:
-#   from app.api import analysis, submissions, auth
-#   app.include_router(auth.router, prefix="/api/v1")
-#   app.include_router(submissions.router, prefix="/api/v1")
-#   app.include_router(analysis.router, prefix="/api/v1")
+app.include_router(analysis.router,   prefix="/api/v1")
 
 
 # ─── Health check endpoints ───────────────────────────────────────────────────
