@@ -29,22 +29,22 @@ This file is a living development log. Update it as you progress through each ph
 
 | Phase | Description | Status |
 |---|---|---|
-| 1 | Foundation — structure, environment, Git | ✅ In Progress |
-| 2 | Text Processing — file upload, PDF/DOCX extraction | ⬜ Pending |
-| 3 | Lexical Similarity — TF-IDF, cosine, n-gram | ⬜ Pending |
-| 4 | Semantic Analysis — embeddings, vector similarity | ⬜ Pending |
-| 5 | Writing Profile — style metrics, deviation | ⬜ Pending |
-| 6 | Historical Intelligence — student profiles, anomaly detection | ⬜ Pending |
-| 7 | RAG — document ingestion, retrieval | ⬜ Pending |
-| 8 | IBM Granite — watsonx.ai connection, prompts | ⬜ Pending |
-| 9 | Agents — specialized agent definitions | ⬜ Pending |
-| 10 | watsonx Orchestrate — agent coordination | ⬜ Pending |
-| 11 | Backend — FastAPI APIs, database, auth | ⬜ Pending |
-| 12 | Frontend — Next.js dashboard | ⬜ Pending |
-| 13 | Integration — end-to-end workflow | ⬜ Pending |
-| 14 | Testing — unit, integration, AI evaluation | ⬜ Pending |
-| 15 | Deployment — Docker, IBM Cloud | ⬜ Pending |
-| 16 | Documentation — README, diagrams, demo | ⬜ Pending |
+| 1 | Foundation — structure, environment, Git | ✅ Complete |
+| 2 | Text Processing — file upload, PDF/DOCX extraction | ✅ Complete |
+| 3 | Lexical Similarity — TF-IDF, cosine, n-gram | ✅ Complete |
+| 4 | Semantic Analysis — embeddings, vector similarity | ✅ Complete |
+| 5 | Writing Profile — style metrics, deviation | ✅ Complete |
+| 6 | Historical Intelligence — student profiles, anomaly detection | 🔶 MVP baseline (reference-text proxy; full DB implementation deferred) |
+| 7 | RAG — document ingestion, retrieval | 🔶 Deferred (architecture documented) |
+| 8 | IBM Granite — watsonx.ai connection, prompts | ✅ Complete |
+| 9 | Agents — specialized agent definitions | 🔶 Deferred (pipeline implemented as single endpoint) |
+| 10 | watsonx Orchestrate — agent coordination | 🔶 Deferred |
+| 11 | Backend — FastAPI APIs | ✅ Complete (no DB/auth in MVP) |
+| 12 | Frontend — instructor dashboard | ✅ Complete (HTML/CSS/JS) |
+| 13 | Integration — end-to-end workflow | ✅ Complete — tested end-to-end |
+| 14 | Testing — unit tests | ✅ 16 unit tests passing |
+| 15 | Deployment — Docker | ✅ Dockerfile + docker-compose ready |
+| 16 | Documentation — README, diagrams, notes | ✅ Complete |
 
 ---
 
@@ -119,7 +119,10 @@ Update this section after each IBM Bob session to document what was built.
 
 | Date | Phase | What Bob Helped Build |
 |---|---|---|
-| — | Phase 1 | Project structure, .gitignore, .env.example, README, PROJECT_NOTES, main.py scaffold |
+| Session 1 | Phase 1 | Project structure, .gitignore, .env.example, README, PROJECT_NOTES, main.py scaffold |
+| Session 1 | Phase 2 | File upload endpoint, extractor service rewrite, Pydantic schemas, 16 unit tests, conftest.py |
+| Session 2 | MVP | risk_scoring.py (correct weights), granite_reasoning.py (correct prompt + fallback), POST /api/v1/analysis/analyze pipeline, instructor dashboard UI |
+| Session 3 | Phase 5 | writing_style.py — 8 metrics, Flesch readability, style deviation score; wired into pipeline; Docker multi-stage config |
 
 ---
 

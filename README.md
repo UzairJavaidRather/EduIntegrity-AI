@@ -1,119 +1,93 @@
 # EduIntegrity AI
 ### AI-Driven Plagiarism Intelligence for Assignments
 
-> **Disclaimer:** This system is designed to identify suspicious patterns and provide evidence-based risk indicators. It does **not** automatically accuse any student of plagiarism or academic misconduct. The instructor always makes the final decision.
+> **Disclaimer:** This system identifies suspicious patterns and provides evidence-based risk indicators. It does **not** automatically accuse any student of plagiarism or academic misconduct. The instructor always makes the final decision.
 
 ---
 
 ## What Is This?
 
-EduIntegrity AI is a web-based academic integrity analysis platform that helps instructors identify potential integrity concerns in student assignments. The system performs multi-dimensional analysis — lexical similarity, semantic similarity, writing-style profiling, historical pattern comparison, citation analysis, and AI-authorship indicators — and presents a transparent, explainable risk score to support instructor review.
+EduIntegrity AI is a web-based academic integrity analysis platform that helps instructors identify potential integrity concerns in student assignments. The system performs multi-dimensional analysis and presents a transparent, explainable risk score to support instructor review.
 
-IBM Granite (via IBM watsonx.ai) provides the contextual AI reasoning layer that interprets structured evidence and generates natural-language explanations. IBM watsonx Orchestrate coordinates the multi-agent workflow.
+IBM Granite (via IBM watsonx.ai) provides the contextual AI reasoning layer — it interprets structured evidence and generates natural-language explanations that the instructor can act on.
 
 ---
 
-## Technology Stack
+## How It Works
+
+```
+Instructor uploads assignment
+        ↓
+Text extraction (PDF / DOCX / TXT)
+        ↓
+Lexical similarity   →  TF-IDF + cosine similarity
+Semantic similarity  →  Sentence embeddings (all-MiniLM-L6-v2)
+Writing style        →  8 measurable style metrics + deviation score
+        ↓
+Risk score calculation (6-component weighted score, 0–100)
+        ↓
+IBM Granite assessment via watsonx.ai
+        ↓
+Instructor dashboard — evidence, score, explanation, decision section
+```
+
+---
+
+## Technology Stack (MVP)
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js (React, TypeScript) |
-| Backend | Python, FastAPI |
-| Database | PostgreSQL |
+| Frontend | HTML / CSS / JavaScript (single-page dashboard) |
+| Backend | Python 3.11, FastAPI |
 | AI Platform | IBM watsonx.ai |
 | AI Model | IBM Granite |
-| Agent Orchestration | IBM watsonx Orchestrate |
 | Semantic Embeddings | Sentence Transformers (`all-MiniLM-L6-v2`) |
-| Vector Database | ChromaDB (FAISS for prototype) |
+| Lexical Analysis | scikit-learn (TF-IDF, cosine similarity) |
 | Containerization | Docker, Docker Compose |
-| Cloud | IBM Cloud |
 | Version Control | GitHub |
 
----
-
-## Project Structure
-
-```
-EduIntegrity-AI/
-│
-├── backend/
-│   ├── app/
-│   │   ├── main.py              ← FastAPI application entry point
-│   │   ├── api/                 ← HTTP route handlers
-│   │   ├── services/            ← Core analysis business logic
-│   │   ├── agents/              ← AI agent definitions
-│   │   ├── models/              ← SQLAlchemy database models
-│   │   ├── schemas/             ← Pydantic request/response schemas
-│   │   └── utils/               ← Shared utility functions
-│   └── tests/                   ← Backend test suite
-│
-├── frontend/
-│   ├── app/                     ← Next.js app router pages
-│   ├── components/              ← Reusable UI components
-│   ├── services/                ← API client functions
-│   └── public/                  ← Static assets
-│
-├── rag/                         ← RAG pipeline (document ingestion, retrieval)
-├── data/                        ← Sample assignments, test fixtures
-├── docs/                        ← Architecture diagrams, project notes
-├── docker/                      ← Dockerfiles and compose configuration
-│
-├── .env.example                 ← Environment variable template (safe to commit)
-├── .gitignore
-├── README.md
-└── PROJECT_NOTES.md
-```
+> **IBM Bob** was used as the primary coding assistant throughout — generating services, writing tests, designing the architecture, and integrating IBM watsonx.ai.
 
 ---
 
-## Risk Score
+## Analysis Dimensions
 
-The platform calculates a 0–100 risk score using configurable weights:
+| Dimension | Method | Weight |
+|---|---|---|
+| Semantic Similarity | Sentence embeddings + cosine similarity | 25% |
+| Lexical Similarity | TF-IDF + cosine similarity | 20% |
+| Writing Style Deviation | 8 measurable metrics (Flesch, TTR, sentence length…) | 20% |
+| Historical Anomaly | Deviation from student's past work | 15% |
+| Citation Anomaly | Unusual citation patterns | 10% |
+| AI-Authorship Indicator | Writing patterns consistent with AI assistance | 10% |
 
-| Component | Default Weight |
-|---|---|
-| Semantic similarity | 25% |
-| Lexical similarity | 20% |
-| Writing-style deviation | 20% |
-| Historical anomaly | 15% |
-| Citation anomaly | 10% |
-| AI-authorship indicator | 10% |
+> These weights are **project-defined values** — not scientifically universal thresholds. The risk score is an advisory indicator. The instructor makes the final decision.
 
 **Risk Bands:**
-- `0–30` → LOW
-- `31–60` → MODERATE
-- `61–80` → HIGH
-- `81–100` → VERY HIGH
-
-> These weights are project-defined values configured for this prototype. They are not scientifically universal thresholds. Institutions should review and adjust these weights based on their specific context and requirements.
+| Score | Band |
+|---|---|
+| 0–30 | 🟢 LOW |
+| 31–60 | 🟡 MODERATE |
+| 61–80 | 🔴 HIGH |
+| 81–100 | ⛔ VERY HIGH |
 
 ---
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
-
 - Python 3.10+
-- Node.js 18+
-- PostgreSQL (or Docker)
 - IBM Cloud account with watsonx.ai access
 
-### 1. Clone the repository
-
+### 1. Clone and configure
 ```bash
 git clone https://github.com/your-username/EduIntegrity-AI.git
 cd EduIntegrity-AI
-```
-
-### 2. Configure environment variables
-
-```bash
 cp .env.example .env
-# Edit .env with your real IBM credentials and database details
+# Edit .env with your IBM credentials
 ```
 
-### 3. Set up the Python backend
-
+### 2. Start the backend
 ```bash
 cd backend
 python -m venv venv
@@ -121,56 +95,84 @@ python -m venv venv
 # Windows
 venv\Scripts\activate
 
-# macOS/Linux
-source venv/bin/activate
+pip install fastapi uvicorn[standard] pydantic python-dotenv python-multipart pypdf python-docx scikit-learn sentence-transformers ibm-watsonx-ai
 
-pip install -r requirements.txt
-```
-
-### 4. Start the backend
-
-```bash
-cd backend
 uvicorn app.main:app --reload
 ```
 
-The API will be available at `http://localhost:8000`  
-Interactive API docs: `http://localhost:8000/docs`
-
-### 5. Set up the frontend (Phase 12)
-
+### 3. Open the frontend
 ```bash
-cd frontend
-npm install
-npm run dev
+# Simply open in a browser:
+start frontend\index.html
 ```
 
-The UI will be available at `http://localhost:3000`
+The backend runs at `http://localhost:8000`  
+API docs at `http://localhost:8000/docs`
+
+### 4. With Docker
+```bash
+cd docker
+docker-compose up --build
+```
 
 ---
 
-## IBM Bob Role
+## Demo Scenarios
 
-IBM Bob is used as the primary development and coding assistant throughout this project:
-- Generating and modifying backend services
-- Creating project structure and configuration
-- Writing and improving tests
-- Debugging and code review
-- Docker and deployment configuration
-- IBM service integration guidance
+| Submission file | Reference file | Expected result |
+|---|---|---|
+| `data/samples/sample_essay.txt` | *(none — uses default corpus)* | LOW risk |
+| `data/samples/high_similarity_essay.txt` | `data/samples/sample_essay.txt` | MODERATE–HIGH risk |
+
+---
+
+## Project Structure
+
+```
+EduIntegrity-AI/
+├── backend/
+│   ├── app/
+│   │   ├── main.py                  ← FastAPI entry point
+│   │   ├── api/
+│   │   │   ├── analysis.py          ← POST /api/v1/analysis/analyze
+│   │   │   └── extraction.py        ← POST /api/v1/extraction/extract-text
+│   │   └── services/
+│   │       ├── extractor.py         ← PDF/DOCX/TXT text extraction
+│   │       ├── lexical_similarity.py← TF-IDF cosine similarity
+│   │       ├── semantic_similarity.py← Sentence embeddings
+│   │       ├── writing_style.py     ← 8 style metrics + deviation score
+│   │       ├── risk_scoring.py      ← 6-component risk score (0–100)
+│   │       └── granite_reasoning.py ← IBM Granite via watsonx.ai
+│   └── tests/
+│       └── test_extractor.py        ← 16 unit tests (all passing)
+├── frontend/
+│   └── index.html                   ← Instructor dashboard
+├── data/samples/                    ← Test assignment files
+├── docker/                          ← Dockerfile + docker-compose
+├── docs/                            ← Architecture diagrams
+├── .env.example                     ← Environment variable template
+└── PROJECT_NOTES.md                 ← Development log
+```
+
+---
+
+## IBM Bob Usage
+
+IBM Bob was the primary development assistant for this project:
+- Generated all service layer code and architecture
+- Wrote the 16-test unit test suite
+- Designed the thin-router / thick-service pattern
+- Implemented temp file cleanup and encoding fallback patterns
+- Integrated IBM watsonx.ai SDK with graceful fallback
+- Built the Docker multi-stage configuration
+- Reviewed and explained all generated code
 
 ---
 
 ## Important Notes
 
-- API keys and credentials must **never** be committed to Git
+- API keys and credentials are **never** committed to Git — stored in `.env` only
 - The `.env` file is excluded by `.gitignore`
-- Only `.env.example` (with placeholder values) is committed
-- All AI-generated risk scores and indicators are advisory only
+- All risk scores and indicators are advisory only
+- The system never says "the student plagiarised" — it surfaces patterns for instructor review
 - The instructor always makes the final academic integrity decision
-
----
-
-## License
-
-This project is developed as an internship demonstration. Refer to your institution's guidelines for usage terms.

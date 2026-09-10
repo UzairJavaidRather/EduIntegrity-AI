@@ -1,10 +1,22 @@
+"""
+EduIntegrity AI — IBM Granite Connection Test
+
+Verifies that the watsonx.ai credentials in .env are correct and
+Granite is reachable. Run this before demoing to confirm IBM services work.
+
+Usage:
+    cd backend
+    venv\\Scripts\\activate
+    python test_granite.py
+"""
 
 import os
 from dotenv import load_dotenv
-from ibm_watsonx_ai import Credentials, APIClient
-from ibm_watsonx_ai.foundation_models import ModelInference
 
 load_dotenv()
+
+from ibm_watsonx_ai import Credentials, APIClient
+from ibm_watsonx_ai.foundation_models import ModelInference
 
 credentials = Credentials(
     url=os.environ["WATSONX_URL"],
@@ -19,9 +31,15 @@ model = ModelInference(
     api_client=client,
 )
 
+# Test with a realistic academic integrity advisory prompt
 response = model.generate_text(
-    prompt="In one sentence, what is academic integrity?"
+    prompt=(
+        "You are an academic integrity advisor. A submission shows 72% lexical similarity "
+        "and 85% semantic similarity with reference material. In two sentences, describe "
+        "what these indicators suggest without accusing the student."
+    ),
+    params={"max_new_tokens": 150}
 )
 
-print("SUCCESS. Granite responded:")
+print("SUCCESS — IBM Granite responded:")
 print(response)
