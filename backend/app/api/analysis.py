@@ -61,6 +61,9 @@ class AnalysisReport(BaseModel):
     risk_contributions: dict
     risk_weights: dict
 
+    # Matched passages (phrases found in both submission and reference)
+    matched_passages: list[str]
+
     # IBM Granite natural-language assessment
     granite_assessment: str
     granite_source: str          # "granite" | "fallback"
@@ -81,12 +84,13 @@ _DEFAULT_REFERENCE = (
 )
 
 
-def _extract_matched_passages(text1: str, text2: str, max_passages: int = 5) -> str:
+def _extract_matched_passages(text1: str, text2: str, max_passages: int = 5) -> list[str]:
     """
     Find short overlapping phrases between two texts.
-    Returns a formatted string for the Granite prompt and UI display.
+    Returns a list of matched phrase strings for display in the UI
+    and for inclusion in the Granite evidence prompt.
 
-    Simple approach: find 4+ word sequences that appear in both texts.
+    Simple approach: find 4+ word sequences where all words appear in text2.
     Good enough for an MVP without needing a full diff library.
     """
     words1 = text1.lower().split()
@@ -98,17 +102,13 @@ def _extract_matched_passages(text1: str, text2: str, max_passages: int = 5) -> 
     i = 0
     while i <= len(words1) - window and len(passages) < max_passages:
         phrase = " ".join(words1[i:i + window])
-        # Check if all words of the phrase appear in text2
         if all(w in words2_set for w in phrase.split()):
-            passages.append(f'"{phrase}"')
+            passages.append(phrase)
             i += window   # skip ahead to avoid overlapping matches
         else:
             i += 1
 
-    if not passages:
-        return "No significant matching phrases detected."
-
-    return "\n".join(f"  - {p}" for p in passages)
+    return passages
 
 
 # ─── Endpoint ─────────────────────────────────────────────────────────────────
@@ -202,7 +202,14 @@ async def analyze_submission(
     )
 
     # ── 7. Build Granite evidence and get assessment ──────────────────────────
-    matched = _extract_matched_passages(submission_text, reference_text)
+    matched_list = _extract_matched_passages(submission_text, reference_text)
+
+    # Format passages as a string for the Granite prompt
+    if matched_list:
+        matched_str = "\n".join(f'  - "{p}"' for p in matched_list)
+    else:
+        matched_str = "No significant matching phrases detected."
+
     evidence = {
         "filename":             sub_filename,
         "word_count":           sub_result["word_count"],
@@ -210,7 +217,7 @@ async def analyze_submission(
         "semantic_similarity":  sem_score,
         "risk_score":           risk["risk_score"],
         "risk_level":           risk["risk_level"],
-        "matched_passages":     matched,
+        "matched_passages":     matched_str,
         "style_deviation":      style_dev,
         "readability_score":    style_profile.get("readability_score", 0),
     }
@@ -241,6 +248,7 @@ async def analyze_submission(
         risk_color=risk["risk_color"],
         risk_contributions=risk["contributions"],
         risk_weights=risk["weights_used"],
+        matched_passages=matched_list,
         granite_assessment=assessment,
         granite_source=granite_source,
         disclaimer=risk["disclaimer"],

@@ -66,3 +66,8 @@ rag/faiss_index/
 # === Logs ====================================================================
 *.log
 logs/
+
+# Screenshots / local images
+img_*.png
+*.png
+*.jpg
