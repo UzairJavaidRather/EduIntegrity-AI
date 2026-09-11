@@ -39,10 +39,14 @@ app = FastAPI(
 
 # ─── CORS middleware ──────────────────────────────────────────────────────────
 # CORS controls which frontend origins are allowed to make requests to this API.
-# In development we allow localhost:3000 (Next.js dev server).
+# In development we allow common frontend ports used by local tools
+# (Next.js at 3000, Live Server at 5500).
 # In production this should be locked down to your actual domain.
 
-_cors_origins_raw = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+_cors_origins_raw = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500,http://127.0.0.1:5500",
+)
 _cors_origins = [origin.strip() for origin in _cors_origins_raw.split(",")]
 
 app.add_middleware(
