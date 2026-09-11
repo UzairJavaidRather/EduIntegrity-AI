@@ -1,0 +1,462 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EduIntegrity AI — Architecture Blueprint</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 36px 24px 48px;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: -0.5px;
+  }
+  .header p {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 6px;
+  }
+  .ibm-badge {
+    display: inline-block;
+    margin-top: 12px;
+    background: #1d4ed8;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Layout ── */
+  .blueprint {
+    max-width: 820px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── Nodes ── */
+  .node {
+    border-radius: 10px;
+    padding: 14px 20px;
+    position: relative;
+  }
+  .node-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .node-desc {
+    font-size: 12px;
+    opacity: 0.8;
+    line-height: 1.5;
+  }
+
+  /* Node colour themes */
+  .n-browser  { background: #1e3a5f; border: 1.5px solid #3b82f6; }
+  .n-bob      { background: #1a2e1a; border: 1.5px solid #22c55e; }
+  .n-backend  { background: #1e2a3a; border: 1.5px solid #60a5fa; }
+  .n-service  { background: #1e2533; border: 1.5px solid #475569; }
+  .n-granite  { background: #1a1040; border: 1.5px solid #8b5cf6; }
+  .n-watsonx  { background: #160f35; border: 1.5px solid #6d28d9; }
+  .n-risk     { background: #2a1a10; border: 1.5px solid #f97316; }
+  .n-docker   { background: #0f2033; border: 1.5px solid #0ea5e9; }
+
+  .n-browser .node-title  { color: #93c5fd; }
+  .n-bob .node-title      { color: #86efac; }
+  .n-backend .node-title  { color: #93c5fd; }
+  .n-service .node-title  { color: #94a3b8; }
+  .n-granite .node-title  { color: #c4b5fd; }
+  .n-watsonx .node-title  { color: #a78bfa; }
+  .n-risk .node-title     { color: #fb923c; }
+  .n-docker .node-title   { color: #38bdf8; }
+
+  /* ── Arrows ── */
+  .arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2px 0;
+  }
+  .arrow-line {
+    width: 2px;
+    height: 22px;
+    background: #334155;
+  }
+  .arrow-label {
+    font-size: 10px;
+    color: #64748b;
+    margin: 1px 0;
+    letter-spacing: 0.3px;
+  }
+  .arrow-head {
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 7px solid #334155;
+  }
+
+  /* ── Services row ── */
+  .services-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 0;
+  }
+  .service-card {
+    background: #1e2533;
+    border: 1.5px solid #334155;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .service-card .s-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #93c5fd;
+    margin-bottom: 3px;
+  }
+  .service-card .s-file {
+    font-size: 10px;
+    color: #64748b;
+    font-family: monospace;
+    margin-bottom: 4px;
+  }
+  .service-card .s-desc {
+    font-size: 10px;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
+  .service-card .s-badge {
+    display: inline-block;
+    margin-top: 5px;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .badge-blue  { background: #1e3a5f; color: #93c5fd; }
+  .badge-green { background: #1a2e1a; color: #86efac; }
+  .badge-purple{ background: #1a1040; color: #c4b5fd; }
+
+  /* ── Risk table ── */
+  .risk-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .risk-cell {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 7px 6px;
+    text-align: center;
+  }
+  .risk-cell .pct { font-size: 14px; font-weight: 800; color: #f97316; }
+  .risk-cell .lbl { font-size: 9px; color: #64748b; margin-top: 2px; line-height: 1.3; }
+
+  /* ── Band row ── */
+  .band-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .band-cell {
+    border-radius: 6px;
+    padding: 7px;
+    text-align: center;
+  }
+  .band-cell .range { font-size: 12px; font-weight: 800; }
+  .band-cell .level { font-size: 10px; font-weight: 700; margin-top: 2px; }
+  .b-low      { background: #14532d; }
+  .b-mod      { background: #451a03; }
+  .b-high     { background: #450a0a; }
+  .b-vhigh    { background: #3b0764; }
+
+  /* ── IBM Bob box ── */
+  .bob-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .bob-item {
+    background: #0f2010;
+    border: 1px solid #166534;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 10px;
+    color: #86efac;
+    line-height: 1.5;
+  }
+  .bob-item strong { color: #4ade80; }
+
+  /* ── Section labels ── */
+  .section-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 8px;
+  }
+  .section-row .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #475569;
+    white-space: nowrap;
+  }
+  .section-row .divider {
+    flex: 1;
+    height: 1px;
+    background: #1e293b;
+  }
+
+  /* ── Footer ── */
+  footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid #1e293b;
+    text-align: center;
+    font-size: 11px;
+    color: #334155;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎓 EduIntegrity AI — Architecture Blueprint</h1>
+  <p>AI-Driven Plagiarism Intelligence for Assignments</p>
+  <span class="ibm-badge">Built with IBM Bob · Powered by IBM Granite · IBM watsonx.ai</span>
+</div>
+
+<div class="blueprint">
+
+  
+  <div class="section-row">
+    <span class="section-label">IBM Bob — Development Assistant</span>
+    <div class="divider"></div>
+  </div>
+
+  <div class="node n-bob">
+    <div class="node-title">🤖 IBM Bob</div>
+    <div class="node-desc">Primary coding assistant used throughout the entire project lifecycle</div>
+    <div class="bob-grid">
+      <div class="bob-item"><strong>Code Generation</strong><br />All 6 service modules, 2 API routers, Pydantic schemas</div>
+      <div class="bob-item"><strong>Test Writing</strong><br />37 unit tests across extractor, writing style, risk scoring</div>
+      <div class="bob-item"><strong>Architecture</strong><br />Thin-router / thick-service pattern, temp file cleanup, encoding fallback</div>
+      <div class="bob-item"><strong>IBM Integration</strong><br />watsonx.ai SDK wiring, graceful fallback, evidence-based prompt design</div>
+      <div class="bob-item"><strong>Docker Config</strong><br />Multi-stage Dockerfile.backend, Nginx frontend, docker-compose</div>
+      <div class="bob-item"><strong>Documentation</strong><br />README, architecture.md, .env.example, PROJECT_NOTES.md</div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">generates &amp; reviews</div><div class="arrow-head"></div></div>
+
+  
+  <div class="section-row">
+    <span class="section-label">Frontend</span>
+    <div class="divider"></div>
+  </div>
+
+  <div class="node n-browser">
+    <div class="node-title">🖥 Instructor Dashboard  ·  frontend/index.html</div>
+    <div class="node-desc">
+      Single-page HTML/CSS/JS application  · 
+      Upload zone (drag &amp; drop)  · 
+      5-step progress indicator  · 
+      Risk banner with colour coding  · 
+      Similarity score cards  · 
+      Animated risk breakdown bars  · 
+      Writing style profile grid  · 
+      Matched passages (amber highlight)  · 
+      IBM Granite assessment panel  · 
+      Instructor decision section
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">HTTP POST multipart/form-data</div><div class="arrow-head"></div></div>
+
+  
+  <div class="section-row">
+    <span class="section-label">Backend — FastAPI (Python)</span>
+    <div class="divider"></div>
+  </div>
+
+  <div class="node n-backend">
+    <div class="node-title">⚙️ FastAPI Backend  ·  backend/app/main.py</div>
+    <div class="node-desc">
+      <strong style="color:#93c5fd">POST</strong> /api/v1/analysis/analyze  · 
+      <strong style="color:#93c5fd">POST</strong> /api/v1/extraction/extract-text  · 
+      <strong style="color:#93c5fd">GET</strong> /health  · 
+      CORS middleware  ·  Pydantic validation  ·  Environment variable config
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">calls in sequence</div><div class="arrow-head"></div></div>
+
+  
+  <div class="section-row">
+    <span class="section-label">Analysis Services — backend/app/services/</span>
+    <div class="divider"></div>
+  </div>
+
+  <div class="services-row">
+    <div class="service-card">
+      <div class="s-title">📄 Text Extraction</div>
+      <div class="s-file">extractor.py</div>
+      <div class="s-desc">PDF (pypdf) · DOCX (python-docx) · TXT · Whitespace cleaning · Min-char guard · Temp file cleanup</div>
+      <span class="s-badge badge-blue">Step 1</span>
+    </div>
+    <div class="service-card">
+      <div class="s-title">🔤 Lexical Similarity</div>
+      <div class="s-file">lexical_similarity.py</div>
+      <div class="s-desc">TF-IDF vectorisation · Cosine similarity · scikit-learn · Returns 0.0 – 1.0</div>
+      <span class="s-badge badge-blue">Step 2a</span>
+    </div>
+    <div class="service-card">
+      <div class="s-title">🧠 Semantic Similarity</div>
+      <div class="s-file">semantic_similarity.py</div>
+      <div class="s-desc">Sentence Transformers · all-MiniLM-L6-v2 · Embedding cosine similarity · Detects paraphrasing</div>
+      <span class="s-badge badge-blue">Step 2b</span>
+    </div>
+    <div class="service-card">
+      <div class="s-title">✍️ Writing Style</div>
+      <div class="s-file">writing_style.py</div>
+      <div class="s-desc">8 metrics: avg sentence length, word length, vocab diversity, punctuation density, Flesch readability, long word ratio, sentence std dev · Style deviation score</div>
+      <span class="s-badge badge-blue">Step 3</span>
+    </div>
+    <div class="service-card">
+      <div class="s-title">📊 Risk Scoring</div>
+      <div class="s-file">risk_scoring.py</div>
+      <div class="s-desc">6-component weighted score · 0–100 · Configurable via .env · 4 risk bands · Disclaimer always included</div>
+      <span class="s-badge badge-green">Step 4</span>
+    </div>
+    <div class="service-card">
+      <div class="s-title">💡 Granite Reasoning</div>
+      <div class="s-file">granite_reasoning.py</div>
+      <div class="s-desc">Builds evidence prompt · Calls IBM Granite via watsonx.ai SDK · Graceful rule-based fallback · Advisory language only</div>
+      <span class="s-badge badge-purple">Step 5</span>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">structured evidence dict</div><div class="arrow-head"></div></div>
+
+  
+  <div class="section-row">
+    <span class="section-label">IBM AI Platform</span>
+    <div class="divider"></div>
+  </div>
+
+  <div class="node n-watsonx" style="display:flex;gap:16px;align-items:flex-start">
+    <div style="flex:1">
+      <div class="node-title">🔷 IBM watsonx.ai</div>
+      <div class="node-desc">AI platform hosting IBM Granite · Accessed via <code style="font-size:10px;background:#0f0a2a;padding:1px 5px;border-radius:3px">ibm-watsonx-ai</code> Python SDK · Credentials from .env · Regional endpoint configurable</div>
+    </div>
+    <div style="width:1px;background:#334155;align-self:stretch"></div>
+    <div style="flex:1.2">
+      <div class="node-title">🟣 IBM Granite</div>
+      <div class="node-desc">Receives: filename, word count, lexical score, semantic score, style deviation, readability, risk score, risk level, matched passages<br /><br />
+      Returns: natural-language advisory assessment · Uses indicator language ("patterns suggest", "warrants review") · Never accuses the student</div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">assessment returned to pipeline</div><div class="arrow-head"></div></div>
+
+  
+  <div class="section-row">
+    <span class="section-label">Risk Score Formula (Project-Defined Weights)</span>
+    <div class="divider"></div>
+  </div>
+
+  <div class="node n-risk">
+    <div class="node-title">📈 Risk Score · 0 – 100</div>
+    <div class="node-desc">Weighted combination of all analysis components. Weights are configurable via environment variables. NOT scientifically universal thresholds.</div>
+    <div class="risk-row">
+      <div class="risk-cell"><div class="pct">25%</div><div class="lbl">Semantic Similarity</div></div>
+      <div class="risk-cell"><div class="pct">20%</div><div class="lbl">Lexical Similarity</div></div>
+      <div class="risk-cell"><div class="pct">20%</div><div class="lbl">Style Deviation</div></div>
+      <div class="risk-cell"><div class="pct">15%</div><div class="lbl">Historical Anomaly</div></div>
+      <div class="risk-cell"><div class="pct">10%</div><div class="lbl">Citation Anomaly</div></div>
+      <div class="risk-cell"><div class="pct">10%</div><div class="lbl">AI Indicator</div></div>
+    </div>
+    <div class="band-row">
+      <div class="band-cell b-low"><div class="range">0–30</div><div class="level" style="color:#4ade80">🟢 LOW</div></div>
+      <div class="band-cell b-mod"><div class="range">31–60</div><div class="level" style="color:#fb923c">🟡 MODERATE</div></div>
+      <div class="band-cell b-high"><div class="range">61–80</div><div class="level" style="color:#f87171">🔴 HIGH</div></div>
+      <div class="band-cell b-vhigh"><div class="range">81–100</div><div class="level" style="color:#c084fc">⛔ VERY HIGH</div></div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">AnalysisReport JSON response</div><div class="arrow-head"></div></div>
+
+  
+  <div class="node n-browser" style="border-color:#22d3ee">
+    <div class="node-title" style="color:#67e8f9">👩‍🏫 Instructor Review &amp; Decision</div>
+    <div class="node-desc">
+      Instructor reviews all evidence · Risk score is advisory only · Three decision options:
+       <strong style="color:#86efac">No Action — Cleared</strong>  · 
+      <strong style="color:#fbbf24">Requires Further Review</strong>  · 
+      <strong style="color:#f87171">Escalate for Investigation</strong>
+      <br /><br />
+      <span style="color:#f87171;font-weight:600">⚠ The system never accuses a student. The instructor makes the final academic integrity decision.</span>
+    </div>
+  </div>
+
+  
+  <div class="section-row" style="margin-top:24px">
+    <span class="section-label">Deployment</span>
+    <div class="divider"></div>
+  </div>
+
+  <div class="node n-docker">
+    <div class="node-title">🐳 Docker</div>
+    <div class="node-desc" style="display:flex;gap:24px;flex-wrap:wrap">
+      <div><strong style="color:#38bdf8">Dockerfile.backend</strong><br />Python 3.11-slim · Multi-stage build · Non-root user · uvicorn</div>
+      <div><strong style="color:#38bdf8">Dockerfile.frontend</strong><br />Nginx Alpine · Serves index.html · Proxies /api/ to backend</div>
+      <div><strong style="color:#38bdf8">docker-compose.yml</strong><br />backend + frontend services · env_file: .env · Health checks</div>
+    </div>
+  </div>
+
+  
+  <div class="section-row" style="margin-top:24px">
+    <span class="section-label">Test Coverage</span>
+    <div class="divider"></div>
+  </div>
+
+  <div class="node n-bob" style="border-color:#22c55e">
+    <div class="node-title">✅ 37 / 37 Tests Passing</div>
+    <div class="bob-grid">
+      <div class="bob-item"><strong>test_extractor.py</strong> — 16 tests<br />_clean_text, extract_from_path, extract_from_bytes, temp cleanup</div>
+      <div class="bob-item"><strong>test_analysis_services.py</strong> — 21 tests<br />build_style_profile (9) · calculate_style_deviation (4) · calculate_risk_score (8)</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Made with IBM Bob  ·  EduIntegrity AI  ·  Academic Integrity Analysis Platform
+</footer>
+
+</body>
+</html>

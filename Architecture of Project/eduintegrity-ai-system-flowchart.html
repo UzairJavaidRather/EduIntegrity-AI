@@ -1,0 +1,448 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: #ffffff;
+    padding: 32px 24px 40px;
+  }
+
+  /* ── page header ── */
+  .page-title {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .page-title h1 {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.3px;
+  }
+  .page-title p {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  /* ── flowchart wrapper ── */
+  .flow {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* ── generic node ── */
+  .node {
+    width: 100%;
+    border-radius: 8px;
+    padding: 11px 18px;
+    text-align: center;
+    position: relative;
+  }
+  .node .label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .node .sub {
+    font-size: 10px;
+    margin-top: 3px;
+    opacity: 0.8;
+    line-height: 1.4;
+  }
+
+  /* ── node colours ── */
+  .c-start    { background:#1d4ed8; color:#fff; border:2px solid #1d4ed8; }
+  .c-process  { background:#f0f9ff; color:#0c4a6e; border:2px solid #7dd3fc; }
+  .c-decision { background:#fffbeb; color:#78350f; border:2px solid #fbbf24; transform: none; }
+  .c-analysis { background:#f0fdf4; color:#14532d; border:2px solid #86efac; }
+  .c-ibm      { background:#ede9fe; color:#3b0764; border:2px solid #a78bfa; }
+  .c-risk     { background:#fff7ed; color:#7c2d12; border:2px solid #fb923c; }
+  .c-result   { background:#f0fdf4; color:#14532d; border:2px solid #22c55e; }
+  .c-end      { background:#0f172a; color:#f8fafc; border:2px solid #0f172a; }
+  .c-bob      { background:#f0fdf4; color:#15803d; border:2px solid #4ade80; border-style: dashed; }
+
+  /* ── diamond decision ── */
+  .diamond-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+  }
+  .diamond {
+    background: #fffbeb;
+    border: 2px solid #fbbf24;
+    color: #78350f;
+    transform: rotate(45deg);
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .diamond-inner {
+    transform: rotate(-45deg);
+    text-align: center;
+    padding: 4px;
+  }
+  .diamond-inner .label { font-size: 11px; font-weight: 700; color: #78350f; }
+  .diamond-inner .sub   { font-size: 9px; color: #92400e; margin-top: 2px; }
+
+  /* ── parallel row ── */
+  .parallel {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .parallel .node { width: 100%; }
+
+  /* ── two-col ── */
+  .twocol {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .twocol .node { width: 100%; }
+
+  /* ── arrow ── */
+  .arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 1px 0;
+  }
+  .arrow-body {
+    width: 2px;
+    height: 20px;
+    background: #cbd5e1;
+  }
+  .arrow-label {
+    font-size: 9px;
+    color: #94a3b8;
+    font-style: italic;
+    margin: 1px 0;
+    letter-spacing: 0.2px;
+  }
+  .arrow-head {
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 7px solid #cbd5e1;
+  }
+
+  /* ── side-branch arrows ── */
+  .branch-row {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .branch-main { flex: 1; }
+  .branch-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding-top: 24px;
+  }
+
+  /* ── IBM Bob annotation ── */
+  .bob-note {
+    position: relative;
+    width: 100%;
+  }
+  .bob-pill {
+    display: inline-block;
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    color: #166534;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+  }
+
+  /* ── section divider ── */
+  .divider {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0 2px;
+  }
+  .divider-line { flex: 1; height: 1px; background: #e2e8f0; }
+  .divider-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ── risk bands inline ── */
+  .bands {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+    margin-top: 6px;
+  }
+  .band {
+    flex: 1;
+    border-radius: 5px;
+    padding: 4px 2px;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 800;
+  }
+  .band-low   { background:#dcfce7; color:#166534; }
+  .band-mod   { background:#fef3c7; color:#92400e; }
+  .band-high  { background:#fee2e2; color:#991b1b; }
+  .band-vhigh { background:#ede9fe; color:#4c1d95; }
+
+  footer {
+    margin-top: 32px;
+    text-align: center;
+    font-size: 10px;
+    color: #94a3b8;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>EduIntegrity AI — End-to-End System Flowchart</h1>
+  <p>AI-Driven Plagiarism Intelligence for Assignments  ·  IBM Bob  ·  IBM Granite  ·  IBM watsonx.ai</p>
+</div>
+
+<div class="flow">
+
+  
+  <div class="node c-start" style="width:260px;border-radius:999px">
+    <div class="label">🎓 Instructor Opens Dashboard</div>
+    <div class="sub">frontend/index.html</div>
+  </div>
+
+  <div class="arrow"><div class="arrow-body"></div><div class="arrow-head"></div></div>
+
+  
+  <div class="divider"><div class="divider-line"></div><div class="divider-label">Step 1 — Upload</div><div class="divider-line"></div></div>
+  <div class="node c-process">
+    <div class="label">📄 Upload Submission File</div>
+    <div class="sub">Drag &amp; drop or file picker · .pdf / .docx / .txt · Optional reference file</div>
+  </div>
+
+  <div class="arrow"><div class="arrow-body"></div><div class="arrow-label">POST /api/v1/analysis/analyze</div><div class="arrow-head"></div></div>
+
+  
+  <div class="divider"><div class="divider-line"></div><div class="divider-label">Step 2 — Validation</div><div class="divider-line"></div></div>
+  <div class="diamond-wrap">
+    <div class="diamond">
+      <div class="diamond-inner">
+        <div class="label">Valid?</div>
+        <div class="sub">type · size · not empty</div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div style="width:100%;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin:4px 0">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+      <div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:4px">NO</div>
+      <div class="node" style="background:#fef2f2;border:2px solid #fca5a5;color:#991b1b;width:100%">
+        <div class="label">⚠ HTTP Error Returned</div>
+        <div class="sub">415 wrong type · 413 too large · 422 empty</div>
+      </div>
+      <div style="height:16px;width:2px;background:#fca5a5;margin:4px 0"></div>
+      <div style="font-size:9px;color:#ef4444;font-weight:700">→ Error shown in UI</div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+      <div style="font-size:9px;color:#22c55e;font-weight:700;margin-bottom:4px">YES</div>
+      <div class="node c-analysis" style="width:100%">
+        <div class="label">✅ Extract Text</div>
+        <div class="sub">extractor.py · pypdf / python-docx / plain read · Clean whitespace</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-body"></div><div class="arrow-head"></div></div>
+
+  
+  <div class="divider"><div class="divider-line"></div><div class="divider-label">Step 3 — Parallel Analysis</div><div class="divider-line"></div></div>
+  <div class="parallel">
+    <div class="node c-analysis">
+      <div class="label">🔤 Lexical Similarity</div>
+      <div class="sub">lexical_similarity.py<br />TF-IDF · Cosine similarity<br />scikit-learn<br /><strong>→ score 0.0–1.0</strong></div>
+    </div>
+    <div class="node c-analysis">
+      <div class="label">🧠 Semantic Similarity</div>
+      <div class="sub">semantic_similarity.py<br />Sentence Transformers<br />all-MiniLM-L6-v2<br /><strong>→ score 0.0–1.0</strong></div>
+    </div>
+    <div class="node c-analysis">
+      <div class="label">✍️ Writing Style</div>
+      <div class="sub">writing_style.py<br />8 metrics · Flesch readability<br />Vocab diversity · Std dev<br /><strong>→ deviation 0.0–1.0</strong></div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-body"></div><div class="arrow-label">all scores combined</div><div class="arrow-head"></div></div>
+
+  
+  <div class="node c-process">
+    <div class="label">🔍 Extract Matched Passages</div>
+    <div class="sub">Find overlapping 4+ word phrases between submission and reference · Returned as evidence list</div>
+  </div>
+
+  <div class="arrow"><div class="arrow-body"></div><div class="arrow-head"></div></div>
+
+  
+  <div class="divider"><div class="divider-line"></div><div class="divider-label">Step 4 — Risk Scoring</div><div class="divider-line"></div></div>
+  <div class="node c-risk">
+    <div class="label">📊 Calculate Risk Score (0–100)</div>
+    <div class="sub">risk_scoring.py · Configurable weights via .env · Project-defined — not universal thresholds</div>
+    <div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;justify-content:center">
+      <span style="background:#fff7ed;border:1px solid #fb923c;border-radius:4px;padding:2px 6px;font-size:9px;color:#7c2d12;font-weight:700">Semantic 25%</span>
+      <span style="background:#fff7ed;border:1px solid #fb923c;border-radius:4px;padding:2px 6px;font-size:9px;color:#7c2d12;font-weight:700">Lexical 20%</span>
+      <span style="background:#fff7ed;border:1px solid #fb923c;border-radius:4px;padding:2px 6px;font-size:9px;color:#7c2d12;font-weight:700">Style 20%</span>
+      <span style="background:#fff7ed;border:1px solid #fb923c;border-radius:4px;padding:2px 6px;font-size:9px;color:#7c2d12;font-weight:700">Historical 15%</span>
+      <span style="background:#fff7ed;border:1px solid #fb923c;border-radius:4px;padding:2px 6px;font-size:9px;color:#7c2d12;font-weight:700">Citation 10%</span>
+      <span style="background:#fff7ed;border:1px solid #fb923c;border-radius:4px;padding:2px 6px;font-size:9px;color:#7c2d12;font-weight:700">AI Indicator 10%</span>
+    </div>
+    <div class="bands">
+      <div class="band band-low">0–30<br />LOW</div>
+      <div class="band band-mod">31–60<br />MODERATE</div>
+      <div class="band band-high">61–80<br />HIGH</div>
+      <div class="band band-vhigh">81–100<br />VERY HIGH</div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-body"></div><div class="arrow-label">structured evidence dict</div><div class="arrow-head"></div></div>
+
+  
+  <div class="divider"><div class="divider-line"></div><div class="divider-label">Step 5 — IBM AI Assessment</div><div class="divider-line"></div></div>
+  <div class="twocol">
+    <div class="node c-ibm">
+      <div class="label">🔷 IBM watsonx.ai</div>
+      <div class="sub">AI platform<br />ibm-watsonx-ai SDK<br />Credentials from .env<br />Regional endpoint</div>
+    </div>
+    <div class="node c-ibm">
+      <div class="label">🟣 IBM Granite</div>
+      <div class="sub">Receives evidence prompt<br />Explains scores in plain language<br />Advisory language only<br />"indicators suggest…"</div>
+    </div>
+  </div>
+
+  
+  <div class="arrow"><div class="arrow-body"></div><div class="arrow-head"></div></div>
+  <div class="diamond-wrap">
+    <div class="diamond">
+      <div class="diamond-inner">
+        <div class="label">Granite configured?</div>
+        <div class="sub">.env credentials set</div>
+      </div>
+    </div>
+  </div>
+  <div style="width:100%;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin:4px 0">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+      <div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:4px">NO</div>
+      <div class="node" style="background:#f8fafc;border:2px solid #cbd5e1;color:#475569;width:100%">
+        <div class="label">📋 Rule-Based Fallback</div>
+        <div class="sub">_fallback_assessment() · Score thresholds · Still informative</div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+      <div style="font-size:9px;color:#8b5cf6;font-weight:700;margin-bottom:4px">YES</div>
+      <div class="node c-ibm" style="width:100%">
+        <div class="label">💡 Granite Assessment</div>
+        <div class="sub">Natural-language explanation · Evidence-based · Max 200 words</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-body"></div><div class="arrow-label">AnalysisReport JSON</div><div class="arrow-head"></div></div>
+
+  
+  <div class="divider"><div class="divider-line"></div><div class="divider-label">Step 6 — Dashboard Display</div><div class="divider-line"></div></div>
+  <div class="node c-process">
+    <div class="label">📱 Results Rendered in Dashboard</div>
+    <div class="sub" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:6px">
+      <span style="background:#eff6ff;border:1px solid #93c5fd;border-radius:4px;padding:2px 6px;font-size:9px;color:#1e40af">Risk Banner + Score</span>
+      <span style="background:#eff6ff;border:1px solid #93c5fd;border-radius:4px;padding:2px 6px;font-size:9px;color:#1e40af">Similarity Scores</span>
+      <span style="background:#eff6ff;border:1px solid #93c5fd;border-radius:4px;padding:2px 6px;font-size:9px;color:#1e40af">Style Profile Grid</span>
+      <span style="background:#eff6ff;border:1px solid #93c5fd;border-radius:4px;padding:2px 6px;font-size:9px;color:#1e40af">Risk Breakdown Bars</span>
+      <span style="background:#eff6ff;border:1px solid #93c5fd;border-radius:4px;padding:2px 6px;font-size:9px;color:#1e40af">Matched Passages</span>
+      <span style="background:#ede9fe;border:1px solid #a78bfa;border-radius:4px;padding:2px 6px;font-size:9px;color:#4c1d95">Granite Assessment</span>
+      <span style="background:#eff6ff;border:1px solid #93c5fd;border-radius:4px;padding:2px 6px;font-size:9px;color:#1e40af">Text Preview</span>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-body"></div><div class="arrow-head"></div></div>
+
+  
+  <div class="divider"><div class="divider-line"></div><div class="divider-label">Step 7 — Instructor Decision</div><div class="divider-line"></div></div>
+  <div class="node" style="background:#fefce8;border:2px solid #fbbf24;color:#713f12">
+    <div class="label">⚠️ Advisory Notice</div>
+    <div class="sub">This report is an indicator only. It does NOT constitute proof of plagiarism or misconduct.</div>
+  </div>
+
+  <div class="arrow"><div class="arrow-body"></div><div class="arrow-head"></div></div>
+
+  <div class="parallel" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="node" style="background:#dcfce7;border:2px solid #86efac;color:#166534">
+      <div class="label">✅ No Action</div>
+      <div class="sub">Cleared by instructor</div>
+    </div>
+    <div class="node" style="background:#fef3c7;border:2px solid #fbbf24;color:#92400e">
+      <div class="label">🔍 Further Review</div>
+      <div class="sub">Instructor follows up</div>
+    </div>
+    <div class="node" style="background:#fee2e2;border:2px solid #fca5a5;color:#991b1b">
+      <div class="label">⚠️ Escalate</div>
+      <div class="sub">Formal investigation</div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-body"></div><div class="arrow-head"></div></div>
+
+  
+  <div class="node c-end" style="width:260px;border-radius:999px">
+    <div class="label">Decision Recorded &amp; Workflow Complete</div>
+  </div>
+
+  
+  <div class="divider" style="margin-top:24px"><div class="divider-line"></div><div class="divider-label">IBM Bob — Role in This Project</div><div class="divider-line"></div></div>
+  <div class="node c-bob">
+    <div class="label">🤖 IBM Bob — Development &amp; Coding Assistant</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:7px;font-size:10px;color:#166534;line-height:1.5">
+        <strong>Generated</strong><br />All 6 services · 2 API routers · Pydantic schemas · Docker config
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:7px;font-size:10px;color:#166534;line-height:1.5">
+        <strong>Tested</strong><br />37 unit tests · Extractor · Writing style · Risk scoring
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:7px;font-size:10px;color:#166534;line-height:1.5">
+        <strong>Documented</strong><br />README · Architecture · .env.example · PROJECT_NOTES
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Made with IBM Bob  ·  EduIntegrity AI  ·  Academic Integrity Analysis Platform</footer>
+</body>
+</html>
